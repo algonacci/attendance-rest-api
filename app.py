@@ -1,9 +1,13 @@
 import os
-from flask import Flask
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
 import mysql.connector
+import module as md
 
 
 app = Flask(__name__)
+app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg'])
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'
 
 # db = mysql.connector.connect(
 #     host="localhost",
@@ -15,12 +19,45 @@ app = Flask(__name__)
 # cursor = db.cursor()
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
+
+
 @app.route("/")
 def index():
     return {
         "status_code": 200,
         "message": "Success!"
     }
+
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    if request.method == "POST":
+        file = request.files["image"]
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            predicted_class, confidence = md.predict(image_path)
+            return jsonify({
+                "status_code": 200,
+                "message": "Success",
+                "image_path": "http://localhost:5000/"+image_path,
+                "prediction": predicted_class,
+                "confidence": confidence,
+            })
+        else:
+            return jsonify({
+                "status_code": 400,
+                "message": "Image not found! Upload image in JPG format"
+            })
+    else:
+        return jsonify({
+            "status_code": 403,
+            "message": "Method not allowed!"
+        }), 403
 
 
 @app.errorhandler(400)
