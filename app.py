@@ -9,14 +9,14 @@ app = Flask(__name__)
 app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg'])
 app.config['UPLOAD_FOLDER'] = 'static/uploads/'
 
-# db = mysql.connector.connect(
-#     host="localhost",
-#     user="root",
-#     passwd="",
-#     database="db_attendanceai",
-# )
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="",
+    database="db_attendanceai",
+)
 
-# cursor = db.cursor()
+cursor = db.cursor()
 
 
 def allowed_file(filename):
@@ -26,10 +26,10 @@ def allowed_file(filename):
 
 @app.route("/")
 def index():
-    return {
+    return jsonify({
         "status_code": 200,
         "message": "Success!"
-    }
+    })
 
 
 @app.route("/predict", methods=["POST"])
