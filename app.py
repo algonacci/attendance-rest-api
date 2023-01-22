@@ -36,11 +36,27 @@ def index():
 def predict():
     if request.method == "POST":
         file = request.files["image"]
+        name = request.form["name"]
+        id_user = request.form["user_id"]
+        time = request.form["time"]
+        attendance_type = request.form["attendance_type"]
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             predicted_class, confidence = md.predict(image_path)
+
+            cursor.execute(
+                """
+                INSERT INTO `attendances`
+                (`id_user`, `name`, `time`, `attendance_type`)
+                VALUES
+                ('{}', '{}', '{}', '{}')
+                """.format(id_user, name, time, attendance_type)
+            )
+
+            db.commit()
+
             return jsonify({
                 "status_code": 200,
                 "message": "Success",
