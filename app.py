@@ -95,21 +95,23 @@ def clock_out():
 
 
 @app.route("/request", methods=["POST"])
-def request():
+def request_attendance():
     user_id = request.form["user_id"]
     request_attendance_date = request.form["request_attendance_date"]
     request_type_id = request.form["request_type_id"]
-    attachment = request.files["attachment"]
+    # attachment = request.files["attachment"]
     notes = request.form["notes"]
 
     cursor.execute(
         """
         INSERT INTO `request_attendances`
-        (`user_id`, `request_attendance_date`, `request_type_id`, `attachment`, `notes`, `created_at`, `updated_at`)
+        (`user_id`, `request_attendance_date`, `request_type_id`, `notes`, `created_at`, `updated_at`)
         VALUES
-        ('{}', '{}', '{}', '{}', '{}', '{}', '{}')
-        """.format(user_id, request_attendance_date, request_type_id, attachment, notes, datetime.datetime.now(), datetime.datetime.now())
+        ('{}', '{}', '{}', '{}', '{}', '{}')
+        """.format(user_id, request_attendance_date, request_type_id, notes, datetime.datetime.now(), datetime.datetime.now())
     )
+
+    db.commit()
 
     return jsonify({
         "status_code": 200
