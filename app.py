@@ -36,10 +36,8 @@ def index():
 def predict():
     if request.method == "POST":
         file = request.files["image"]
-        name = request.form["name"]
-        id_user = request.form["user_id"]
+        user_id = request.form["user_id"]
         time = request.form["time"]
-        attendance_type = request.form["attendance_type"]
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -49,10 +47,10 @@ def predict():
             cursor.execute(
                 """
                 INSERT INTO `attendances`
-                (`id_user`, `name`, `time`, `attendance_type`)
+                (`user_id`, `clock_in`, `image_file`, `created_at`, `updated_at`)
                 VALUES
-                ('{}', '{}', '{}', '{}')
-                """.format(id_user, name, time, attendance_type)
+                ('{}', '{}', 'http://127.0.0.1:5000/static/uploads/{}', '{}', '{}')
+                """.format(user_id, time, filename, time, time)
             )
 
             db.commit()
@@ -74,6 +72,25 @@ def predict():
             "status_code": 403,
             "message": "Method not allowed!"
         }), 403
+
+
+@app.route("/clockout", methods=["POST"])
+def clock_out():
+    user_id = request.form["user_id"]
+    time = request.form["time"]
+
+    cursor.execute("""
+    UPDATE attendances
+    SET clock_out='{}', updated_at='{}'
+    WHERE user_id='{}'
+    """.format(time, time, user_id))
+    db.commit()
+
+    return jsonify({
+        "status_code": 200,
+        "message": "Success clocking out",
+        "time": time
+    })
 
 
 @app.errorhandler(400)
