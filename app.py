@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 import mysql.connector
 import module as md
+import datetime
 
 
 app = Flask(__name__)
@@ -90,6 +91,28 @@ def clock_out():
         "status_code": 200,
         "message": "Success clocking out",
         "time": time
+    })
+
+
+@app.route("/request", methods=["POST"])
+def request():
+    user_id = request.form["user_id"]
+    request_attendance_date = request.form["request_attendance_date"]
+    request_type_id = request.form["request_type_id"]
+    attachment = request.files["attachment"]
+    notes = request.form["notes"]
+
+    cursor.execute(
+        """
+        INSERT INTO `request_attendances`
+        (`user_id`, `request_attendance_date`, `request_type_id`, `attachment`, `notes`, `created_at`, `updated_at`)
+        VALUES
+        ('{}', '{}', '{}', '{}', '{}', '{}', '{}')
+        """.format(user_id, request_attendance_date, request_type_id, attachment, notes, datetime.datetime.now(), datetime.datetime.now())
+    )
+
+    return jsonify({
+        "status_code": 200
     })
 
 
