@@ -77,21 +77,31 @@ def predict():
 
 @app.route("/clockout", methods=["POST"])
 def clock_out():
+    file = request.files["image"]
     user_id = request.form["user_id"]
     time = request.form["time"]
 
-    cursor.execute("""
-    UPDATE attendances
-    SET clock_out='{}', updated_at='{}'
-    WHERE user_id='{}'
-    """.format(time, time, user_id))
-    db.commit()
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        predicted_class, confidence = md.predict(image_path)
 
-    return jsonify({
-        "status_code": 200,
-        "message": "Success clocking out",
-        "time": time
-    })
+        cursor.execute("""
+        UPDATE attendances
+        SET clock_out='{}', updated_at='{}'
+        WHERE user_id='{}'
+        """.format(time, time, user_id))
+        db.commit()
+
+        return jsonify({
+            "status_code": 200,
+            "message": "Success clocking out",
+            "time": time,
+            "image_path": "http://localhost:5000/"+image_path,
+            "prediction": predicted_class,
+            "confidence": confidence,
+        })
 
 
 @app.route("/request", methods=["POST"])
